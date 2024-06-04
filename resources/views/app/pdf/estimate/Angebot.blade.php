@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>@lang('pdf_estimate_label') - {{ $estimate->estimate_number }}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -140,6 +139,20 @@
             margin-top: 5px;
             width: 160px;
             word-wrap: break-word;
+        }
+
+        /* -- Headline -- */
+
+        .headline-container {
+            display: block;
+            float: left;
+        }
+
+        .headline {
+            font-size: 18px;
+            line-height: 15px;
+            color: black;
+            margin-top: 10px;
         }
 
         /* -- Estimate Details -- */
@@ -345,83 +358,153 @@
             padding-left: 0;
         }
 
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+        }
+
+        .footer-wrapper {
+            padding: 0 30px;
+            margin-top: 30px;
+        }
+
+        .footer-wrapper .footer-label {
+            display: inline-block;
+            width: 60px;
+            line-height: 14px;
+            height: 14px;
+        }
+
+        .footer-table {
+            border-top: 0.620315px solid #E8E8E8;
+            color: #595959;
+            font-size: 10px;
+            line-height: 14px;
+        }
+
+        .footer-table a {
+            color: #595959;
+            text-decoration: none;
+        }
+
+        .partials {
+            margin-bottom: 30px;
+        }
     </style>
-
-    @if (App::isLocale('th'))
-        @include('app.pdf.locale.th')
-    @endif
 </head>
-
 <body>
-    <div class="header-container">
-        <table width="100%">
+<div class="header-container">
+    <table width="100%">
+        <tr>
+            <td width="50%" class="header-section-left">
+                @if ($logo)
+                    <img class="header-logo" style="height: 50px;" src="{{ $logo }}" alt="Company Logo">
+                @else
+                    <h1 class="header-logo"> {{ $estimate->customer->company->name }} </h1>
+                @endif
+            </td>
+            <td width="50%" class="text-right company-address-container company-address">
+                {!! $company_address !!}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<hr class="header-bottom-divider">
+
+<div class="wrapper">
+    <div class="main-content">
+        <div class="customer-address-container">
+            <div class="billing-address-container billing-address">
+                @if ($billing_address)
+                    <b>@lang('pdf_bill_to')</b> <br>
+                    {!! $billing_address !!}
+                @endif
+            </div>
+
+            <div @if ($estimate->customer->billingaddress) class="shipping-address-container shipping-address"
+                 @else class="shipping-address-container--left shipping-address" @endif>
+                @if ($shipping_address)
+                    <b>@lang('pdf_ship_to')</b> <br>
+                    {!! $shipping_address !!}
+                @endif
+            </div>
+
+            <div style="clear: both;"></div>
+        </div>
+
+        <div class="estimate-details-container">
+            <table>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_estimate_number')</td>
+                    <td class="attribute-value"> &nbsp;{{ $estimate->estimate_number }}</td>
+                </tr>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_estimate_date') </td>
+                    <td class="attribute-value"> &nbsp;{{ $estimate->formattedEstimateDate }}</td>
+                </tr>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_estimate_expire_date')</td>
+                    <td class="attribute-value"> &nbsp;{{ $estimate->formattedExpiryDate }}</td>
+                </tr>
+            </table>
+        </div>
+        <div style="clear: both;"></div>
+
+        <div class="customer-address-container">
+            <div class="headline-container headline">
+                Angebot {{ $estimate->estimate_number }}
+                <br> {{ $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSTITEL}') }}
+            </div>
+
+
+            <div style="clear: both;"></div>
+        </div>
+        <div class="notes">
+            @if ($estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSBESCHREIBUNG}'))
+                <div class="notes-label">
+                    Angebotsbeschreibung
+                </div>
+                {!! $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSBESCHREIBUNG}') !!}
+            @endif
+        </div>
+        <div style="padding-top:30px;">
+            @include('app.pdf.estimate.partials.table')
+        </div>
+        <div class="notes">
+            @if ($notes)
+                <div class="notes-label">
+                    @lang('pdf_notes')
+                </div>
+                {!! $notes !!}
+            @endif
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="footer-wrapper">
+        <table width="100%" class="footer-table" cellspacing="0" border="0">
             <tr>
-                <td width="50%" class="header-section-left">
-                    @if ($logo)
-                        <img class="header-logo" style="height: 50px;" src="{{ $logo }}" alt="Company Logo">
-                    @else
-                        <h1 class="header-logo"> {{ $estimate->customer->company->name }} </h1>
-                    @endif
+                <td width="33%">
+                    <b>Ruckzack OG</b><br>
+                    Langfeldstraße 35<br>
+                    4040 Plesching
                 </td>
-                <td width="50%" class="text-right company-address-container company-address">
-                    {!! $company_address !!}
+                <td width="33%">
+                    <a href="mailto:office@ruckzack.at">office@ruckzack.at</a><br>
+                    +43 732 261790<br>
+                    <a href="https://ruckzack.at/">www.ruckzack.at</a>
+                </td>
+                <td width="33%">
+                    <span class="footer-label">USt-IdNr</span> ATU77089179<br>
+                    <span class="footer-label">IBAN</span> AT20 2032 0321 0059 3461<br>
                 </td>
             </tr>
         </table>
     </div>
-
-    <hr class="header-bottom-divider">
-
-    <div class="wrapper">
-        <div class="main-content">
-            <div class="customer-address-container">
-                <div class="billing-address-container billing-address">
-                    @if ($billing_address)
-                        <b>@lang('pdf_bill_to')</b> <br>
-                        {!! $billing_address !!}
-                    @endif
-                </div>
-
-                <div @if ($estimate->customer->billingaddress) class="shipping-address-container shipping-address" @else class="shipping-address-container--left shipping-address" @endif>
-                    @if ($shipping_address)
-                        <b>@lang('pdf_ship_to')</b> <br>
-                        {!! $shipping_address !!}
-                    @endif
-                </div>
-
-                <div style="clear: both;"></div>
-            </div>
-
-            <div class="estimate-details-container">
-                <table>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_estimate_number')</td>
-                        <td class="attribute-value"> &nbsp;{{ $estimate->estimate_number }}</td>
-                    </tr>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_estimate_date') </td>
-                        <td class="attribute-value"> &nbsp;{{ $estimate->formattedEstimateDate }}</td>
-                    </tr>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_estimate_expire_date')</td>
-                        <td class="attribute-value"> &nbsp;{{ $estimate->formattedExpiryDate }}</td>
-                    </tr>
-                </table>
-            </div>
-            <div style="clear: both;"></div>
-
-            @include('app.pdf.estimate.partials.table')
-
-            <div class="notes">
-                @if ($notes)
-                    <div class="notes-label">
-                        @lang('pdf_notes')
-                    </div>
-                    {!! $notes !!}
-                @endif
-            </div>
-        </div>
-    </div>
+</footer>
 </body>
-
 </html>

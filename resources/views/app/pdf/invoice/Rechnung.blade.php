@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>@lang('pdf_invoice_label') - {{ $invoice->invoice_number }}</title>
+    <title>@lang('pdf_invoice_label') - {{$invoice->invoice_number}}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
     <style type="text/css">
@@ -304,84 +304,132 @@
         .pl-0 {
             padding-left: 0;
         }
+        footer { position: fixed; bottom: 0; left: 0px; right: 0px; height: 100px; }
 
+        .footer-wrapper {
+            padding: 0 30px;
+            margin-top: 30px;
+        }
+        .footer-wrapper .footer-label {
+            display: inline-block;
+            width: 60px;
+            line-height: 14px;
+            height: 14px;
+        }
+        .footer-table {
+            border-top: 0.620315px solid #E8E8E8;
+            color: #595959;
+            font-size: 10px;
+            line-height: 14px;
+        }
+        .footer-table a {
+            color: #595959;
+            text-decoration: none;
+        }
+        .partials {
+            margin-bottom: 30px;
+        }
     </style>
-
-    @if (App::isLocale('th'))
-        @include('app.pdf.locale.th')
-    @endif
 </head>
 
 <body>
-    <div class="header-container">
-        <table width="100%">
-            <tr>
-                <td width="50%" class="header-section-left">
-                    @if ($logo)
-                        <img class="header-logo" style="height: 50px;" src="{{ $logo }}" alt="Company Logo">
-                    @else
-                        <h1 class="header-logo"> {{ $invoice->customer->company->name }} </h1>
-                    @endif
-                </td>
-                <td width="50%" class="text-right company-address-container company-address">
-                    {!! $company_address !!}
-                </td>
-            </tr>
-        </table>
-    </div>
+<div class="header-container">
+    <table width="100%">
+        <tr>
+            <td width="50%" class="header-section-left">
+                @if($logo)
+                    <img class="header-logo" style="height: 50px;" src="{{ $logo }}" alt="Company Logo">
+                @else
+                    <h1 class="header-logo"> {{$invoice->customer->company->name}} </h1>
+                @endif
+            </td>
+            <td width="50%" class="text-right company-address-container company-address">
+                {!! $company_address !!}
+            </td>
+        </tr>
+    </table>
+</div>
 
-    <hr class="header-bottom-divider">
+<hr class="header-bottom-divider">
 
-    <div class="content-wrapper">
-        <div class="main-content">
-            <div class="customer-address-container">
-                <div class="billing-address-container billing-address">
-                    @if ($billing_address)
-                        <b>@lang('pdf_bill_to')</b> <br>
-                        {!! $billing_address !!}
-                    @endif
-                </div>
-
-                <div @if ($billing_address !== '</br>') class="shipping-address-container shipping-address" @else class="shipping-address-container--left shipping-address" @endif>
-                    @if ($shipping_address)
-                        <b>@lang('pdf_ship_to')</b> <br>
-                        {!! $shipping_address !!}
-                    @endif
-                </div>
-                <div style="clear: both;"></div>
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="customer-address-container">
+            <div class="billing-address-container billing-address">
+                @if($billing_address)
+                    <b>@lang('pdf_bill_to')</b> <br>
+                    {!! $billing_address !!}
+                @endif
             </div>
 
-            <div class="invoice-details-container">
-                <table>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_invoice_number')</td>
-                        <td class="attribute-value"> &nbsp;{{ $invoice->invoice_number }}</td>
-                    </tr>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_invoice_date')</td>
-                        <td class="attribute-value"> &nbsp;{{ $invoice->formattedInvoiceDate }}</td>
-                    </tr>
-                    <tr>
-                        <td class="attribute-label">@lang('pdf_invoice_due_date')</td>
-                        <td class="attribute-value"> &nbsp;{{ $invoice->formattedDueDate }}</td>
-                    </tr>
-                </table>
+            <div @if($billing_address !== '</br>') class="shipping-address-container shipping-address" @else class="shipping-address-container--left shipping-address" @endif>
+                @if($shipping_address)
+                    <b>@lang('pdf_ship_to')</b> <br>
+                    {!! $shipping_address !!}
+                @endif
             </div>
             <div style="clear: both;"></div>
         </div>
 
-        @include('app.pdf.invoice.partials.table')
-
-        <div class="notes">
-            @if ($notes)
-                <div class="notes-label">
-                    @lang('pdf_notes')
-                </div>
-
-                {!! $notes !!}
-            @endif
+        <div class="invoice-details-container">
+            <table>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_invoice_number')</td>
+                    <td class="attribute-value"> &nbsp;{{$invoice->invoice_number}}</td>
+                </tr>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_invoice_date')</td>
+                    <td class="attribute-value"> &nbsp;{{$invoice->formattedInvoiceDate}}</td>
+                </tr>
+                <tr>
+                    <td class="attribute-label">@lang('pdf_invoice_due_date')</td>
+                    <td class="attribute-value"> &nbsp;{{$invoice->formattedDueDate}}</td>
+                </tr>
+                <tr>
+                    <td class="attribute-label">Leistungszeitraum</td>
+                    <td class="attribute-value">{{ $invoice->getFormattedString('{CUSTOM_INVOICE_LEISTUNGSZEITRAUM}') }}</td>
+                </tr>
+            </table>
         </div>
+        <div style="clear: both;"></div>
     </div>
+    <div class="partials">
+        @include('app.pdf.invoice.partials.table')
+    </div>
+
+
+    <div class="notes">
+        @if($notes)
+            <div class="notes-label">
+                @lang('pdf_notes')
+            </div>
+
+            {!! $notes !!}
+        @endif
+    </div>
+</div>
+<footer>
+    <div class="footer-wrapper">
+        <table width="100%" class="footer-table" cellspacing="0" border="0">
+            <tr>
+                <td width="33%">
+                    <b>Ruckzack OG</b><br>
+                    Langfeldstraße 35<br>
+                    4040 Plesching
+                </td>
+                <td width="33%">
+                    <a href="mailto:office@ruckzack.at">office@ruckzack.at</a><br>
+                    +43 732 261790<br>
+                    <a href="https://ruckzack.at/">www.ruckzack.at</a>
+                </td>
+                <td width="33%">
+                    <span class="footer-label">USt-IdNr</span> ATU77089179<br>
+                    <span class="footer-label">IBAN</span> AT20 2032 0321 0059 3461<br>
+                </td>
+            </tr>
+        </table>
+    </div>
+</footer>
 </body>
 
 </html>
