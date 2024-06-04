@@ -166,7 +166,7 @@ let estimateMailForm = reactive({
   id: null,
   from: null,
   to: null,
-  subject: 'New Estimate',
+  subject: 'Neues Angebot',
   body: null,
 })
 

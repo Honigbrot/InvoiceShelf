@@ -376,7 +376,7 @@ class RecurringInvoice extends Model
                 'body' => CompanySetting::getSetting('invoice_mail_body', $this->company_id),
                 'from' => config('mail.from.address'),
                 'to' => $this->customer->email,
-                'subject' => 'New Invoice',
+                'subject' => 'Neue Rechnung',
                 'invoice' => $invoice->toArray(),
                 'customer' => $invoice->customer->toArray(),
                 'company' => Company::find($invoice->company_id),

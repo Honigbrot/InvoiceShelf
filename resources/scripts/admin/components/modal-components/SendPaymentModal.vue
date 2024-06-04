@@ -181,7 +181,7 @@ const paymentMailForm = reactive({
   id: null,
   from: null,
   to: null,
-  subject: 'New Payment',
+  subject: 'Neu Zahlung',
   body: null,
 })
 

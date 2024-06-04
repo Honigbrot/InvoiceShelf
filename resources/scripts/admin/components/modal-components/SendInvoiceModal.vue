@@ -181,7 +181,7 @@ const invoiceMailForm = reactive({
   id: null,
   from: null,
   to: null,
-  subject: 'New Invoice',
+  subject: 'Neue Rechnung',
   body: null,
 })
 
