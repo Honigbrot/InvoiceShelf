@@ -281,14 +281,23 @@
 
         /* -- Notes -- */
 
-        .notes {
-            font-size: 12px;
-            color: #595959;
-            margin-top: 80px;
-            margin-left: 30px;
-            width: 442px;
+        .intro-notes {
+            margin: 20px 50px;
             text-align: left;
-            page-break-inside: avoid;
+        }
+
+        .notes {
+            font-size: 11px;
+            color: #595959;
+            margin: 50px;
+            text-align: left;
+        }
+
+        .modular-notes {
+            font-size: 11px;
+            color: #595959;
+            margin: 50px;
+            text-align: left;
         }
 
         .notes-label {
@@ -393,6 +402,10 @@
         .partials {
             margin-bottom: 30px;
         }
+
+        .page-break {
+            page-break-after: always;
+        }
     </style>
 </head>
 <body>
@@ -432,7 +445,6 @@
                     {!! $shipping_address !!}
                 @endif
             </div>
-
             <div style="clear: both;"></div>
         </div>
 
@@ -451,35 +463,148 @@
                     <td class="attribute-value"> &nbsp;{{ $estimate->formattedExpiryDate }}</td>
                 </tr>
             </table>
+
         </div>
         <div style="clear: both;"></div>
 
-        <div class="customer-address-container">
-            <div class="headline-container headline">
-                Angebot {{ $estimate->estimate_number }}
-                <br> {{ $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSTITEL}') }}
-            </div>
+        <div class="intro-notes">
+            @if($estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSTITEL}'))
+                <div class="headline-container headline">
+                    {{ $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSTITEL}') }}
+                </div>
+            @endif
 
-
-            <div style="clear: both;"></div>
-        </div>
-        <div class="notes">
             @if ($estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSBESCHREIBUNG}'))
                 <div class="notes-label">
-                    Angebotsbeschreibung
+                    Projektvision
                 </div>
-                {!! $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSBESCHREIBUNG}') !!}
+                    {!! $estimate->getFormattedString('{CUSTOM_ESTIMATE_ANGEBOTSBESCHREIBUNG}') !!}
             @endif
+
         </div>
-        <div style="padding-top:30px;">
+        <div style="clear: both;"></div>
+
+
+        <div>
             @include('app.pdf.estimate.partials.table')
         </div>
+
         <div class="notes">
             @if ($notes)
                 <div class="notes-label">
                     @lang('pdf_notes')
                 </div>
                 {!! $notes !!}
+            @endif
+        </div>
+        <div class="page-break"></div>
+        <div class="modular-notes">
+
+            {{-- Nicht inkludierte Leistungen --}}
+            @if($estimate->getFormattedString('{CUSTOM_ESTIMATE_NICHT_INKLUDIERTE_LEISTUNGEN}'))
+                <h3>Leistungen, die nicht im Angebot enthalten sind</h3>
+                <p>
+                    {!! $estimate->getFormattedString('{CUSTOM_ESTIMATE_NICHT_INKLUDIERTE_LEISTUNGEN}') !!}
+                </p>
+            @endif
+
+            {{-- Content-Erstellung --}}
+            @if ($contentCreation = $estimate->getFormattedString('{CUSTOM_ESTIMATE_CONTENT_CREATION}'))
+                <h3>Content-Erstellung</h3>
+                @if ($contentCreation == 'Customer')
+                    <p><strong>Inhaltsbefüllung durch den Auftraggeber:</strong> Die Erstellung und Bereitstellung
+                        des
+                        Inhalts erfolgt durch den Auftraggeber. Diese Option setzt voraus, dass der bereitgestellte
+                        Content den technischen Spezifikationen entspricht und termingerecht übergeben wird.</p>
+                @elseif ($contentCreation == 'Ruckzack')
+                    <p><strong>Inhaltsbefüllung durch Ruckzack:</strong> Die vollständige Erstellung des Inhalts
+                        wird
+                        von Ruckzack übernommen. Die Dienstleistung umfasst Kreativität, fachgerechte Ausführung und
+                        pünktliche Lieferung des Contents.</p>
+                @endif
+            @endif
+
+            {{-- Zahlungsbedingungen und -modalitäten --}}
+            @if($paymentMode = $estimate->getFormattedString('{CUSTOM_ESTIMATE_ZAHLUNGSMODALITATEN}'))
+                <h3>Zahlungsoptionen</h3>
+                @if ($paymentMode == 'Abschluss')
+                    <p><strong>Zahlung nach Projektabschluss:</strong> Die vollständige Zahlung des vereinbarten
+                        Betrags
+                        ist innerhalb von 30 Tagen nach der offiziellen Übergabe und Abnahme des Projekts fällig.
+                    </p>
+                @elseif ($paymentMode == 'Anzahlung+Abschluss')
+                    <p><strong>Anzahlung + Schlusszahlung:</strong> 50% des Gesamtbetrags sind als Anzahlung vor
+                        Beginn
+                        des Projekts zu leisten. Die verbleibende Zahlung von 50% wird nach vollständiger Erbringung
+                        der
+                        Dienstleistung und zur Ihrer vollsten Zufriedenheit fällig.</p>
+                @elseif ($paymentMode == 'Meilensteine')
+                    <p><strong>Zahlung nach Meilensteinen:</strong> Die Gesamtzahlung wird in folgende Teile
+                        gegliedert:
+                        30% Anzahlung bei Projektstart, 30% nach Fertigstellung des Designs, und 40% nach
+                        vollständiger
+                        Implementierung der Softwarelösung.</p>
+                @endif
+
+            @endif
+
+            {{-- Änderungsmanagement und Scope Creep --}}
+            @if($estimate->getFormattedString('{CUSTOM_ESTIMATE_SCOPE_CREEP}'))
+                <h3>Änderungsmanagement und Scope Creep</h3>
+                <p>
+                    <strong>Änderungsanforderungen:</strong> Alle Änderungen an den Anforderungen müssen schriftlich
+                    beantragt und von beiden Parteien genehmigt werden.
+                </p>
+                <p>
+                    <strong>Scope Creep:</strong> Zusätzliche Funktionen oder Änderungen, die nicht im
+                    ursprünglichen
+                    Anforderungskatalog enthalten sind, werden gesondert in Rechnung gestellt.
+                </p>
+            @endif
+
+            {{-- DSGVO-Konformität und Datenschutzmaßnahmen --}}
+            @if($estimate->getFormattedString('{CUSTOM_ESTIMATE_DSGVO}'))
+                <h3>DSGVO-Konformität und Datenschutzmaßnahmen</h3>
+                <p>In der Umsetzung des Projekts achten wir sorgfältig darauf, die Datenschutzvorschriften gemäß der
+                    EU-Datenschutz-Grundverordnung (DSGVO) einzuhalten. Zu den technischen und organisatorischen
+                    Maßnahmen
+                    gehören:</p>
+                <ul>
+                    <li><strong>Verschlüsselung:</strong> Alle personenbezogenen Daten werden bei der Übertragung und
+                        Speicherung
+                        verschlüsselt, um die Sicherheit und Vertraulichkeit zu gewährleisten.
+                    </li>
+                    <li><strong>Speicherung und automatische Löschung:</strong> Daten in Serverlog-Files sowie Daten,
+                        die
+                        über
+                        Formulare erfasst werden, werden nur so lange wie notwendig gespeichert und danach automatisch
+                        gelöscht,
+                        um Compliance mit datenschutzrechtlichen Bestimmungen zu gewährleisten.
+                    </li>
+                    <li><strong>Inhaltliche Ausgestaltung:</strong> Die rechtliche und inhaltliche Ausgestaltung von
+                        Impressum,
+                        Datenschutzhinweis und Cookie Consent obliegt dem Herausgeber bzw. Auftraggeber. Wir sorgen für
+                        die
+                        technische Implementierung dieser Elemente gemäß den Vorgaben des Auftraggebers.
+                    </li>
+                </ul>
+                <p>Es ist zu beachten, dass unser Angebot keine Rechtsberatung oder rechtliche Prüfung der Inhalte
+                    umfasst.
+                    Für die rechtliche Konformität der inhaltlichen Gestaltung ist der Auftraggeber
+                    verantwortlich.</p>
+            @endif
+
+            {{-- Schlussbestimmungen --}}
+            @if($estimate->getFormattedString('{CUSTOM_ESTIMATE_SCHLUSSBESTIMMUNGEN}'))
+                <h3>Schlussbestimmungen</h3>
+            <ul>
+                <li><strong>Vertraulichkeit:</strong> Beide Parteien verpflichten sich zur Vertraulichkeit aller
+                    Projektdetails.</li>
+                <li><strong>Haftung:</strong> Die Haftung für Schäden, die durch leichte Fahrlässigkeit verursacht
+                    wurden,
+                    wird ausgeschlossen.</li>
+                <li><strong>Geltendes Recht:</strong> Es gilt österreichisches Recht.</li>
+            </ul>
             @endif
         </div>
     </div>
