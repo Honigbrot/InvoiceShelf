@@ -1609,7 +1609,7 @@
   "pdf_invoice_due_date": "Fälligkeitsdatum",
   "pdf_notes": "Hinweise",
   "pdf_items_label": "Artikel",
-  "pdf_quantity_label": "Menge",
+        "pdf_quantity_label": "Menge / Stunden",
   "pdf_price_label": "Preis",
   "pdf_discount_label": "Rabatt",
   "pdf_amount_label": "Summe",
