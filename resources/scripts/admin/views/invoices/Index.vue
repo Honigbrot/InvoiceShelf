@@ -418,6 +418,7 @@ function refreshTable() {
 }
 
 async function fetchData({ page, filter, sort }) {
+  const limit = 25
   let data = {
     customer_id: filters.customer_id,
     status: filters.status,
@@ -427,6 +428,7 @@ async function fetchData({ page, filter, sort }) {
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
     page,
+    limit,
   }
 
   console.log(data)
@@ -444,7 +446,7 @@ async function fetchData({ page, filter, sort }) {
       totalPages: response.data.meta.last_page,
       currentPage: page,
       totalCount: response.data.meta.total,
-      limit: 10,
+      limit,
     },
   }
 }

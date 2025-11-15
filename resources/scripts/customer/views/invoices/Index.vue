@@ -252,6 +252,7 @@ function toggleFilter() {
 }
 
 async function fetchData({ page, sort }) {
+  const limit = 25
   let data = {
     status: filters.status.value,
     invoice_number: filters.invoice_number,
@@ -260,6 +261,7 @@ async function fetchData({ page, sort }) {
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
     page,
+    limit,
   }
 
   isFetchingInitialData.value = true
@@ -274,7 +276,7 @@ async function fetchData({ page, sort }) {
       totalPages: response.data.meta.last_page,
       currentPage: page,
       totalCount: response.data.meta.total,
-      limit: 10,
+      limit,
     },
   }
 }
