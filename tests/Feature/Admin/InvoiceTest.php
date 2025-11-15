@@ -520,3 +520,116 @@ test('update invoice with EUR currency', function () {
         'base_amount' => $invoice2['taxes'][0]['base_amount'],
     ]);
 });
+
+test('bulk pay multiple invoices', function () {
+    // Create invoices with different statuses and amounts
+    $sentInvoice1 = Invoice::factory()->create([
+        'status' => Invoice::STATUS_SENT,
+        'paid_status' => Invoice::STATUS_UNPAID,
+        'due_amount' => 1000,
+        'total' => 1000,
+        'exchange_rate' => 1,
+    ]);
+
+    $sentInvoice2 = Invoice::factory()->create([
+        'status' => Invoice::STATUS_SENT,
+        'paid_status' => Invoice::STATUS_UNPAID,
+        'due_amount' => 2500,
+        'total' => 2500,
+        'exchange_rate' => 1,
+    ]);
+
+    $viewedInvoice = Invoice::factory()->create([
+        'status' => Invoice::STATUS_VIEWED,
+        'paid_status' => Invoice::STATUS_UNPAID,
+        'due_amount' => 1500,
+        'total' => 1500,
+        'exchange_rate' => 1,
+    ]);
+
+    // This should be skipped (DRAFT status)
+    $draftInvoice = Invoice::factory()->create([
+        'status' => Invoice::STATUS_DRAFT,
+        'paid_status' => Invoice::STATUS_UNPAID,
+        'due_amount' => 5000,
+        'total' => 5000,
+        'exchange_rate' => 1,
+    ]);
+
+    // This should be skipped (fully paid)
+    $paidInvoice = Invoice::factory()->create([
+        'status' => Invoice::STATUS_SENT,
+        'paid_status' => Invoice::STATUS_PAID,
+        'due_amount' => 0,
+        'total' => 3000,
+        'exchange_rate' => 1,
+    ]);
+
+    $ids = [
+        $sentInvoice1->id,
+        $sentInvoice2->id,
+        $viewedInvoice->id,
+        $draftInvoice->id,
+        $paidInvoice->id,
+    ];
+
+    $response = postJson('api/v1/invoices/bulk-payment', ['ids' => $ids]);
+
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+            'payments_created' => 3, // Only 3 eligible invoices
+        ]);
+
+    // Verify payments were created for eligible invoices
+    $this->assertDatabaseHas('payments', [
+        'invoice_id' => $sentInvoice1->id,
+        'amount' => 1000,
+        'customer_id' => $sentInvoice1->customer_id,
+    ]);
+
+    $this->assertDatabaseHas('payments', [
+        'invoice_id' => $sentInvoice2->id,
+        'amount' => 2500,
+        'customer_id' => $sentInvoice2->customer_id,
+    ]);
+
+    $this->assertDatabaseHas('payments', [
+        'invoice_id' => $viewedInvoice->id,
+        'amount' => 1500,
+        'customer_id' => $viewedInvoice->customer_id,
+    ]);
+
+    // Verify no payment was created for draft invoice
+    $this->assertDatabaseMissing('payments', [
+        'invoice_id' => $draftInvoice->id,
+    ]);
+
+    // Verify no payment was created for paid invoice
+    $this->assertDatabaseMissing('payments', [
+        'invoice_id' => $paidInvoice->id,
+        'amount' => 3000,
+    ]);
+
+    // Verify invoices are updated correctly
+    $sentInvoice1->refresh();
+    $this->assertEquals(0, $sentInvoice1->due_amount);
+    $this->assertEquals(Invoice::STATUS_PAID, $sentInvoice1->paid_status);
+
+    $sentInvoice2->refresh();
+    $this->assertEquals(0, $sentInvoice2->due_amount);
+    $this->assertEquals(Invoice::STATUS_PAID, $sentInvoice2->paid_status);
+
+    $viewedInvoice->refresh();
+    $this->assertEquals(0, $viewedInvoice->due_amount);
+    $this->assertEquals(Invoice::STATUS_PAID, $viewedInvoice->paid_status);
+
+    // Verify draft and paid invoices remain unchanged
+    $draftInvoice->refresh();
+    $this->assertEquals(5000, $draftInvoice->due_amount);
+    $this->assertEquals(Invoice::STATUS_UNPAID, $draftInvoice->paid_status);
+
+    $paidInvoice->refresh();
+    $this->assertEquals(0, $paidInvoice->due_amount);
+    $this->assertEquals(Invoice::STATUS_PAID, $paidInvoice->paid_status);
+});

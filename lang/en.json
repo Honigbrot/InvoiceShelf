@@ -638,7 +638,8 @@
     "updated_message": "Payment updated successfully",
     "deleted_message": "Payment deleted successfully | Payments deleted successfully",
     "invalid_amount_message": "Payment amount is invalid",
-    "amount_due": "Due Amount"
+    "amount_due": "Due Amount",
+    "bulk_payment_success": "{count} payment created successfully | {count} payments created successfully"
   },
   "expenses": {
     "title": "Expenses",

@@ -635,7 +635,8 @@
     "updated_message": "Zahlung erfolgreich aktualisiert",
     "deleted_message": "Zahlung erfolgreich gelöscht | Zahlungen erfolgreich gelöscht",
     "invalid_amount_message": "Zahlungsbetrag ist ungültig",
-    "amount_due": "Fälliger Betrag"
+    "amount_due": "Fälliger Betrag",
+    "bulk_payment_success": "{count} Zahlung erfolgreich erstellt | {count} Zahlungen erfolgreich erstellt"
   },
   "expenses": {
     "title": "Ausgaben",

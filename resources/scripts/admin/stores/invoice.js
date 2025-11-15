@@ -399,6 +399,26 @@ export const useInvoiceStore = (useWindow = false) => {
         }
       },
 
+      bulkPayInvoices() {
+        return new Promise((resolve, reject) => {
+          axios
+            .post('/api/v1/invoices/bulk-payment', { ids: this.selectedInvoices })
+            .then((response) => {
+              notificationStore.showNotification({
+                type: 'success',
+                message: global.t('payments.bulk_payment_success', {
+                  count: response.data.payments_created,
+                }),
+              })
+              resolve(response)
+            })
+            .catch((err) => {
+              handleError(err)
+              reject(err)
+            })
+        })
+      },
+
       selectCustomer(id) {
         return new Promise((resolve, reject) => {
           axios
