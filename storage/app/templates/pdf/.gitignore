@@ -1,2 +1,5 @@
-*
+
 !.gitignore
+!invoice/
+!invoice/*.blade.php
+!invoice/*.png

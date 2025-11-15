@@ -638,7 +638,8 @@
     "updated_message": "Payment updated successfully",
     "deleted_message": "Payment deleted successfully | Payments deleted successfully",
     "invalid_amount_message": "Payment amount is invalid",
-    "amount_due": "Due Amount"
+    "amount_due": "Due Amount",
+    "bulk_payment_success": "{count} payment created successfully | {count} payments created successfully"
   },
   "expenses": {
     "title": "Expenses",
@@ -924,6 +925,8 @@
       "company_name": "Company Name",
       "tax_id": "Tax Identification Number",
       "vat_id": "VAT Identification Number",
+      "iban": "IBAN",
+      "bic": "BIC",
       "company_logo": "Company Logo",
       "section_description": "Information about your company that will be displayed on invoices, estimates and other documents created by InvoiceShelf.",
       "phone": "Phone",

@@ -140,7 +140,7 @@
         <BaseDropdown
           v-if="
             invoiceStore.selectedInvoices.length &&
-            userStore.hasAbilities(abilities.DELETE_INVOICE)
+            (userStore.hasAbilities(abilities.DELETE_INVOICE) || userStore.hasAbilities(abilities.CREATE_PAYMENT))
           "
           class="absolute float-right"
         >
@@ -160,7 +160,18 @@
             </span>
           </template>
 
-          <BaseDropdownItem @click="removeMultipleInvoices">
+          <BaseDropdownItem
+            v-if="userStore.hasAbilities(abilities.CREATE_PAYMENT)"
+            @click="recordMultiplePayments"
+          >
+            <BaseIcon name="CreditCardIcon" class="mr-3 text-gray-600" />
+            {{ $t('invoices.record_payment') }}
+          </BaseDropdownItem>
+
+          <BaseDropdownItem
+            v-if="userStore.hasAbilities(abilities.DELETE_INVOICE)"
+            @click="removeMultipleInvoices"
+          >
             <BaseIcon name="TrashIcon" class="mr-3 text-gray-600" />
             {{ $t('general.delete') }}
           </BaseDropdownItem>
@@ -482,6 +493,19 @@ function clearFilter() {
   filters.invoice_number = ''
 
   activeTab.value = t('general.all')
+}
+
+async function recordMultiplePayments() {
+  await invoiceStore.bulkPayInvoices().then((res) => {
+    if (res.data.success) {
+      refreshTable()
+
+      invoiceStore.$patch((state) => {
+        state.selectedInvoices = []
+        state.selectAllField = false
+      })
+    }
+  })
 }
 
 async function removeMultipleInvoices() {
