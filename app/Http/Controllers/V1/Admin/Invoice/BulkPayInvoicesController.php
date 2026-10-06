@@ -8,9 +8,9 @@ use App\Models\ExchangeRateLog;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\SerialNumberFormatter;
+use App\Support\PublicToken;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Vinkla\Hashids\Facades\Hashids;
 
 class BulkPayInvoicesController extends Controller
 {
@@ -65,7 +65,7 @@ class BulkPayInvoicesController extends Controller
             $payment = Payment::create($paymentData);
             
             // Generate unique hash and update sequence numbers
-            $payment->unique_hash = Hashids::connection(Payment::class)->encode($payment->id);
+            $payment->unique_hash = PublicToken::make();
             $payment->sequence_number = $serial->nextSequenceNumber;
             $payment->customer_sequence_number = $serial->nextCustomerSequenceNumber;
             $payment->save();
