@@ -138,19 +138,21 @@
         </BaseTabGroup>
 
         <span
-          v-if="isBulkPaying"
+          v-if="bulkAction"
           class="absolute right-0 flex items-center text-sm font-medium text-primary-500"
           role="status"
           aria-live="polite"
         >
           <SpinnerIcon class="w-4 h-4 mr-2" />
-          {{ $t('payments.bulk_payment_processing', bulkPayingCount) }}
+          {{ $t(bulkActionMessages[bulkAction].processing, bulkActionCount) }}
         </span>
 
         <BaseDropdown
           v-else-if="
             invoiceStore.selectedInvoices.length &&
-            (userStore.hasAbilities(abilities.DELETE_INVOICE) || userStore.hasAbilities(abilities.CREATE_PAYMENT))
+            (userStore.hasAbilities(abilities.DELETE_INVOICE) ||
+              userStore.hasAbilities(abilities.CREATE_PAYMENT) ||
+              userStore.hasAbilities(abilities.VIEW_INVOICE))
           "
           class="absolute float-right"
         >
@@ -179,6 +181,14 @@
           </BaseDropdownItem>
 
           <BaseDropdownItem
+            v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
+            @click="downloadMultipleInvoices"
+          >
+            <BaseIcon name="ArrowDownTrayIcon" class="mr-3 text-gray-600" />
+            {{ $t('invoices.bulk_download') }}
+          </BaseDropdownItem>
+
+          <BaseDropdownItem
             v-if="userStore.hasAbilities(abilities.DELETE_INVOICE)"
             @click="removeMultipleInvoices"
           >
@@ -195,8 +205,8 @@
         :placeholder-count="invoiceStore.invoiceTotalCount >= 20 ? 10 : 5"
         :key="tableKey"
         class="mt-10"
-        :class="{ 'opacity-50 pointer-events-none': isBulkPaying }"
-        :aria-busy="isBulkPaying"
+        :class="{ 'opacity-50 pointer-events-none': bulkAction }"
+        :aria-busy="!!bulkAction"
       >
         <!-- Select All Checkbox -->
         <template #header>
@@ -337,8 +347,19 @@ const status = ref([
   ,
 ])
 const isRequestOngoing = ref(true)
-const isBulkPaying = ref(false)
-const bulkPayingCount = ref(0)
+const MAX_BULK_DOWNLOAD = 50
+const bulkAction = ref(null)
+const bulkActionCount = ref(0)
+const bulkActionMessages = {
+  pay: {
+    processing: 'payments.bulk_payment_processing',
+    leave: 'payments.bulk_payment_leave_warning',
+  },
+  download: {
+    processing: 'invoices.bulk_download_processing',
+    leave: 'invoices.bulk_download_leave_warning',
+  },
+}
 const activeTab = ref('general.draft')
 const router = useRouter()
 const userStore = useUserStore()
@@ -417,8 +438,8 @@ onUnmounted(() => {
 })
 
 onBeforeRouteLeave(() => {
-  if (isBulkPaying.value) {
-    return window.confirm(t('payments.bulk_payment_leave_warning'))
+  if (bulkAction.value) {
+    return window.confirm(t(bulkActionMessages[bulkAction.value].leave))
   }
 })
 
@@ -525,32 +546,58 @@ function clearFilter() {
   activeTab.value = t('general.all')
 }
 
-async function recordMultiplePayments() {
-  if (isBulkPaying.value) {
+async function runBulkAction(action, callback) {
+  if (bulkAction.value) {
     return
   }
 
-  isBulkPaying.value = true
-  bulkPayingCount.value = invoiceStore.selectedInvoices.length
+  bulkAction.value = action
+  bulkActionCount.value = invoiceStore.selectedInvoices.length
   window.addEventListener('beforeunload', warnBeforeUnload)
 
   try {
+    await callback()
+  } catch (err) {
+    // Error notification is already shown by the store.
+  } finally {
+    bulkAction.value = null
+    window.removeEventListener('beforeunload', warnBeforeUnload)
+  }
+}
+
+function clearSelection() {
+  invoiceStore.$patch((state) => {
+    state.selectedInvoices = []
+    state.selectAllField = false
+  })
+}
+
+function recordMultiplePayments() {
+  return runBulkAction('pay', async () => {
     const res = await invoiceStore.bulkPayInvoices()
 
     if (res.data.success) {
       refreshTable()
-
-      invoiceStore.$patch((state) => {
-        state.selectedInvoices = []
-        state.selectAllField = false
-      })
+      clearSelection()
     }
-  } catch (err) {
-    // Error notification is already shown by the store.
-  } finally {
-    isBulkPaying.value = false
-    window.removeEventListener('beforeunload', warnBeforeUnload)
+  })
+}
+
+function downloadMultipleInvoices() {
+  if (invoiceStore.selectedInvoices.length > MAX_BULK_DOWNLOAD) {
+    notificationStore.showNotification({
+      type: 'error',
+      message: t('invoices.bulk_download_limit', { max: MAX_BULK_DOWNLOAD }),
+    })
+    return
   }
+
+  return runBulkAction('download', async () => {
+    await invoiceStore.bulkDownloadInvoices(
+      `${t('invoices.title')}-${new Date().toISOString().slice(0, 10)}.zip`
+    )
+    clearSelection()
+  })
 }
 
 async function removeMultipleInvoices() {

@@ -429,6 +429,38 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
+      async bulkDownloadInvoices(fileName) {
+        try {
+          const response = await axios.post(
+            '/api/v1/invoices/bulk-download',
+            { ids: this.selectedInvoices },
+            { responseType: 'blob' }
+          )
+
+          const url = window.URL.createObjectURL(response.data)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = fileName
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
+          window.URL.revokeObjectURL(url)
+
+          return response
+        } catch (err) {
+          // Blob responses hide the JSON error body that handleError expects.
+          if (err.response?.data instanceof Blob) {
+            try {
+              err.response.data = JSON.parse(await err.response.data.text())
+            } catch (parseError) {
+              // Not JSON; leave the response as-is.
+            }
+          }
+          handleError(err)
+          throw err
+        }
+      },
+
       selectCustomer(id) {
         return new Promise((resolve, reject) => {
           http

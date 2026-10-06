@@ -387,6 +387,10 @@
     "mark_as_default_estimate_template_description": "If enabled, the selected template will be automatically selected for new estimates."
   },
   "invoices": {
+    "bulk_download": "Download PDFs",
+    "bulk_download_processing": "Preparing PDF for {count} invoice… | Preparing PDFs for {count} invoices…",
+    "bulk_download_leave_warning": "The PDF download is still being prepared. Leave this page anyway?",
+    "bulk_download_limit": "Please select at most {max} invoices to download at once.",
     "title": "Invoices",
     "download": "Download",
     "pay_invoice": "Pay Invoice",

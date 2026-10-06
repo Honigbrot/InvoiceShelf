@@ -42,6 +42,7 @@ use App\Http\Controllers\V1\Admin\General\SearchController;
 use App\Http\Controllers\V1\Admin\General\SearchUsersController;
 use App\Http\Controllers\V1\Admin\General\TimeFormatsController;
 use App\Http\Controllers\V1\Admin\General\TimezonesController;
+use App\Http\Controllers\V1\Admin\Invoice\BulkDownloadInvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\BulkPayInvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\ChangeInvoiceStatusController;
 use App\Http\Controllers\V1\Admin\Invoice\CloneInvoiceController;
@@ -274,6 +275,8 @@ Route::prefix('/v1')->group(function () {
             Route::post('/invoices/delete', [InvoicesController::class, 'delete']);
 
             Route::post('/invoices/bulk-payment', BulkPayInvoicesController::class);
+
+            Route::post('/invoices/bulk-download', BulkDownloadInvoicesController::class);
 
             Route::get('/invoices/templates', InvoiceTemplatesController::class);
 

@@ -669,3 +669,34 @@ test('create invoice with tax included', function () {
         'tax_included' => true,
     ]);
 });
+
+test('bulk download invoices as zip', function () {
+    $invoices = Invoice::factory()->count(2)->create();
+    foreach ($invoices as $invoice) {
+        InvoiceItem::factory()->create(['invoice_id' => $invoice->id]);
+    }
+
+    $response = $this->post('api/v1/invoices/bulk-download', [
+        'ids' => $invoices->pluck('id')->all(),
+    ], ['Accept' => 'application/json']);
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/zip');
+
+    $path = tempnam(sys_get_temp_dir(), 'zip-test');
+    file_put_contents($path, $response->streamedContent());
+    $zip = new ZipArchive;
+    expect($zip->open($path))->toBeTrue();
+    expect($zip->numFiles)->toBe(2);
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        expect(substr($zip->getFromIndex($i), 0, 4))->toBe('%PDF');
+    }
+    $zip->close();
+    unlink($path);
+});
+
+test('bulk download rejects more than 50 invoices', function () {
+    postJson('api/v1/invoices/bulk-download', ['ids' => range(1, 51)])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('ids');
+});

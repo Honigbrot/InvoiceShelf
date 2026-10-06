@@ -387,6 +387,10 @@
     "mark_as_default_estimate_template_description": "Wenn aktiviert, wird die ausgewählte Vorlage automatisch für neue Angebote ausgewählt."
   },
   "invoices": {
+    "bulk_download": "PDFs herunterladen",
+    "bulk_download_processing": "PDF für {count} Rechnung wird erstellt… | PDFs für {count} Rechnungen werden erstellt…",
+    "bulk_download_leave_warning": "Der PDF-Download wird noch vorbereitet. Seite trotzdem verlassen?",
+    "bulk_download_limit": "Bitte wähle höchstens {max} Rechnungen auf einmal zum Herunterladen aus.",
     "title": "Rechnungen",
     "download": "Herunterladen",
     "pay_invoice": "Rechnung bezahlen",
