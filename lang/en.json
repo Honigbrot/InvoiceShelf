@@ -642,7 +642,9 @@
     "deleted_message": "Payment deleted successfully | Payments deleted successfully",
     "invalid_amount_message": "Payment amount is invalid",
     "amount_due": "Due Amount",
-    "bulk_payment_success": "{count} payment created successfully | {count} payments created successfully"
+    "bulk_payment_success": "{count} payment created successfully | {count} payments created successfully",
+    "bulk_payment_processing": "{count} invoice is being paid… | {count} invoices are being paid…",
+    "bulk_payment_leave_warning": "Payments are still being recorded. Leave this page anyway?"
   },
   "expenses": {
     "title": "Expenses",

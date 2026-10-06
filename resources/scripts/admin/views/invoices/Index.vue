@@ -137,8 +137,18 @@
           <BaseTab :title="$t('general.due')" filter="DUE" />
         </BaseTabGroup>
 
+        <span
+          v-if="isBulkPaying"
+          class="absolute right-0 flex items-center text-sm font-medium text-primary-500"
+          role="status"
+          aria-live="polite"
+        >
+          <SpinnerIcon class="w-4 h-4 mr-2" />
+          {{ $t('payments.bulk_payment_processing', bulkPayingCount) }}
+        </span>
+
         <BaseDropdown
-          v-if="
+          v-else-if="
             invoiceStore.selectedInvoices.length &&
             (userStore.hasAbilities(abilities.DELETE_INVOICE) || userStore.hasAbilities(abilities.CREATE_PAYMENT))
           "
@@ -185,6 +195,8 @@
         :placeholder-count="invoiceStore.invoiceTotalCount >= 20 ? 10 : 5"
         :key="tableKey"
         class="mt-10"
+        :class="{ 'opacity-50 pointer-events-none': isBulkPaying }"
+        :aria-busy="isBulkPaying"
       >
         <!-- Select All Checkbox -->
         <template #header>
@@ -277,7 +289,7 @@
 
 <script setup>
 import { computed, onUnmounted, reactive, ref, watch, inject } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
 import { useNotificationStore } from '@/scripts/stores/notification'
@@ -290,6 +302,7 @@ import MoonwalkerIcon from '@/scripts/components/icons/empty/MoonwalkerIcon.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
 import SendInvoiceModal from '@/scripts/admin/components/modal-components/SendInvoiceModal.vue'
 import BaseInvoiceStatusLabel from "@/scripts/components/base/BaseInvoiceStatusLabel.vue";
+import SpinnerIcon from '@/scripts/components/icons/SpinnerIcon.vue'
 // Stores
 const invoiceStore = useInvoiceStore()
 const dialogStore = useDialogStore()
@@ -324,6 +337,8 @@ const status = ref([
   ,
 ])
 const isRequestOngoing = ref(true)
+const isBulkPaying = ref(false)
+const bulkPayingCount = ref(0)
 const activeTab = ref('general.draft')
 const router = useRouter()
 const userStore = useUserStore()
@@ -394,10 +409,23 @@ debouncedWatch(
 )
 
 onUnmounted(() => {
+  window.removeEventListener('beforeunload', warnBeforeUnload)
+
   if (invoiceStore.selectAllField) {
     invoiceStore.selectAllInvoices()
   }
 })
+
+onBeforeRouteLeave(() => {
+  if (isBulkPaying.value) {
+    return window.confirm(t('payments.bulk_payment_leave_warning'))
+  }
+})
+
+function warnBeforeUnload(event) {
+  event.preventDefault()
+  event.returnValue = ''
+}
 
 function hasAtleastOneAbility() {
   return userStore.hasAbilities([
@@ -498,7 +526,17 @@ function clearFilter() {
 }
 
 async function recordMultiplePayments() {
-  await invoiceStore.bulkPayInvoices().then((res) => {
+  if (isBulkPaying.value) {
+    return
+  }
+
+  isBulkPaying.value = true
+  bulkPayingCount.value = invoiceStore.selectedInvoices.length
+  window.addEventListener('beforeunload', warnBeforeUnload)
+
+  try {
+    const res = await invoiceStore.bulkPayInvoices()
+
     if (res.data.success) {
       refreshTable()
 
@@ -507,7 +545,12 @@ async function recordMultiplePayments() {
         state.selectAllField = false
       })
     }
-  })
+  } catch (err) {
+    // Error notification is already shown by the store.
+  } finally {
+    isBulkPaying.value = false
+    window.removeEventListener('beforeunload', warnBeforeUnload)
+  }
 }
 
 async function removeMultipleInvoices() {

@@ -415,9 +415,10 @@ export const useInvoiceStore = (useWindow = false) => {
             .then((response) => {
               notificationStore.showNotification({
                 type: 'success',
-                message: global.t('payments.bulk_payment_success', {
-                  count: response.data.payments_created,
-                }),
+                message: global.t(
+                  'payments.bulk_payment_success',
+                  response.data.payments_created
+                ),
               })
               resolve(response)
             })
