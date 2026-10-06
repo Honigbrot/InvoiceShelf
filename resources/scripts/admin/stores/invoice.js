@@ -410,7 +410,7 @@ export const useInvoiceStore = (useWindow = false) => {
 
       bulkPayInvoices() {
         return new Promise((resolve, reject) => {
-          axios
+          http
             .post('/api/v1/invoices/bulk-payment', { ids: this.selectedInvoices })
             .then((response) => {
               notificationStore.showNotification({
@@ -431,7 +431,7 @@ export const useInvoiceStore = (useWindow = false) => {
 
       async bulkDownloadInvoices(fileName) {
         try {
-          const response = await axios.post(
+          const response = await http.post(
             '/api/v1/invoices/bulk-download',
             { ids: this.selectedInvoices },
             { responseType: 'blob' }
