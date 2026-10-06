@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\V1\Admin\RecurringInvoice\RecurringInvoiceController;
 use App\Http\Requests\RecurringInvoiceRequest;
+use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\RecurringInvoice;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
@@ -32,6 +34,26 @@ test('get recurring invoices', function () {
 
     getJson('api/v1/recurring-invoices?page=1')
         ->assertOk();
+});
+
+test('recurring invoice list stays lightweight as generated invoices pile up', function () {
+    $recurringInvoices = RecurringInvoice::factory()->count(5)->create();
+
+    foreach ($recurringInvoices as $recurringInvoice) {
+        Invoice::factory()->count(3)->create([
+            'recurring_invoice_id' => $recurringInvoice->id,
+        ]);
+    }
+
+    DB::enableQueryLog();
+
+    $response = getJson('api/v1/recurring-invoices?page=1&limit=10')
+        ->assertOk()
+        ->assertJsonCount(5, 'data')
+        ->assertJsonStructure(['data' => [['id', 'status', 'frequency', 'total', 'formatted_starts_at', 'customer' => ['name', 'currency']]]]);
+
+    expect($response->json('data.0'))->not->toHaveKeys(['invoices', 'items', 'taxes']);
+    expect(count(DB::getQueryLog()))->toBeLessThan(40);
 });
 
 test('store user using a form request', function () {

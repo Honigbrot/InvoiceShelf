@@ -4,6 +4,7 @@ namespace App\Http\Controllers\V1\Admin\RecurringInvoice;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RecurringInvoiceRequest;
+use App\Http\Resources\RecurringInvoiceListResource;
 use App\Http\Resources\RecurringInvoiceResource;
 use App\Models\RecurringInvoice;
 use Illuminate\Http\Request;
@@ -23,10 +24,11 @@ class RecurringInvoiceController extends Controller
         $limit = $request->has('limit') ? $request->limit : 10;
 
         $recurringInvoices = RecurringInvoice::whereCompany()
+            ->with('customer.currency')
             ->applyFilters($request->all())
             ->paginateData($limit);
 
-        return RecurringInvoiceResource::collection($recurringInvoices)
+        return RecurringInvoiceListResource::collection($recurringInvoices)
             ->additional(['meta' => [
                 'recurring_invoice_total_count' => RecurringInvoice::whereCompany()->count(),
             ]]);
