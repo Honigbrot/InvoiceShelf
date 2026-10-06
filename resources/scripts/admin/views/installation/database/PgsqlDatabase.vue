@@ -1,6 +1,6 @@
 <template>
   <form action="" @submit.prevent="next">
-    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:mb-6 md:mb-6">
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 mb-6">
       <BaseInputGroup
         :label="$t('wizard.database.app_url')"
         :content-loading="isFetchingInitialData"
@@ -153,7 +153,7 @@ const props = defineProps({
 
 const emit = defineEmits(['submit-data', 'on-change-driver'])
 
-const connections = reactive(['sqlite', 'mysql', 'pgsql'])
+const connections = reactive(['sqlite', 'mysql', 'mariadb', 'pgsql'])
 const { t } = useI18n()
 const utils = inject('utils')
 

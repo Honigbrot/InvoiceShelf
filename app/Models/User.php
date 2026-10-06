@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\UserRequest;
 use App\Notifications\MailResetPasswordNotification;
+use App\Support\SafeOrderBy;
 use App\Traits\HasCustomFieldsTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -121,7 +122,7 @@ class User extends Authenticatable implements HasMedia
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function companies(): BelongsToMany
@@ -179,7 +180,7 @@ class User extends Authenticatable implements HasMedia
 
     public function scopeWhereOrder($query, $orderByField, $orderBy)
     {
-        $query->orderBy($orderByField, $orderBy);
+        return SafeOrderBy::apply($query, $orderByField, $orderBy);
     }
 
     public function scopeWhereSearch($query, $search)
@@ -211,6 +212,13 @@ class User extends Authenticatable implements HasMedia
     public function scopeWhereEmail($query, $email)
     {
         return $query->where('email', 'LIKE', '%'.$email.'%');
+    }
+
+    public function scopeWhereCompany($query)
+    {
+        return $query->whereHas('companies', function ($q) {
+            $q->where('company_id', request()->header('company'));
+        });
     }
 
     public function scopePaginateData($query, $limit)
@@ -362,7 +370,13 @@ class User extends Authenticatable implements HasMedia
         $this->update($request->getUserPayload());
 
         $companies = collect($request->companies);
-        $this->companies()->sync($companies->pluck('id'));
+
+        // Memberships in companies the caller does not own stay as they are.
+        $elsewhere = $this->companies()
+            ->whereNotIn('companies.id', $request->managedCompanyIds())
+            ->pluck('companies.id');
+
+        $this->companies()->sync($elsewhere->merge($companies->pluck('id'))->unique()->values());
 
         foreach ($companies as $company) {
             BouncerFacade::scope()->to($company['id']);

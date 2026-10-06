@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\SafeRemoteUrl;
+use App\Support\GotenbergHostPolicy;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PDFConfigurationRequest extends FormRequest
 {
@@ -27,9 +30,14 @@ class PDFConfigurationRequest extends FormRequest
                         'string',
                     ],
                 ];
-                break;
 
             case 'gotenberg':
+                // The operator-declared Gotenberg host skips the public-address
+                // check; anything else is still held to it. See GotenbergHostPolicy.
+                $isDeclaredHost = GotenbergHostPolicy::isExemptFromSafeRemoteUrl(
+                    $this->input('gotenberg_host')
+                );
+
                 return [
                     'pdf_driver' => [
                         'required',
@@ -38,20 +46,31 @@ class PDFConfigurationRequest extends FormRequest
                     'gotenberg_host' => [
                         'required',
                         'url',
+                        Rule::when(! $isDeclaredHost, [new SafeRemoteUrl]),
                     ],
                     'gotenberg_papersize' => [
+                        'required',
+                        'string',
                         function ($attribute, $value, $fail) {
-                            ($attribute); // unused
                             $reg = "/^\d+(pt|px|pc|mm|cm|in) \d+(pt|px|pc|mm|cm|in)$/";
                             if (! preg_match($reg, $value)) {
                                 $fail('Invalid papersize, must be in format "210mm 297mm". Accepts: pt,px,pc,mm,cm,in');
                             }
                         },
                     ],
+                    'gotenberg_margins' => [
+                        'nullable',
+                        'string',
+                    ],
                 ];
 
-                break;
+            default:
+                return [
+                    'pdf_driver' => [
+                        'required',
+                        'string',
+                    ],
+                ];
         }
-        throw new \InvalidArgumentException('Invalid PDFDriver requested');
     }
 }

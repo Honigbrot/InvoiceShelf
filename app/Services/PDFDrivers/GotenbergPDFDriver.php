@@ -2,13 +2,16 @@
 
 namespace App\Services\PDFDrivers;
 
+use App\Rules\SafeRemoteUrl;
+use App\Support\GotenbergHostPolicy;
 use Gotenberg\Gotenberg;
 use Gotenberg\Stream;
 use Illuminate\Http\Response;
+use Psr\Http\Message\ResponseInterface;
 
 class GotenbergPDFResponse
 {
-    /** @var \Psr\Http\Message\ResponseInterface */
+    /** @var ResponseInterface */
     protected $response;
 
     public function __construct($stream)
@@ -36,12 +39,24 @@ class GotenbergPDFDriver
 {
     public function loadView(string $viewname): GotenbergPDFResponse
     {
-        $papersize = explode(' ', config('pdf.gotenberg.papersize'));
+        $papersize = explode(' ', config('pdf.connections.gotenberg.papersize'));
         if (count($papersize) != 2) {
             throw new \InvalidArgumentException('Invalid Gotenberg Papersize specified');
         }
 
-        $host = config('pdf.gotenberg.host');
+        $host = config('pdf.connections.gotenberg.host');
+
+        // Defense in depth against SSRF: a host that bypassed request-time
+        // validation (env/seed/stale config, or DNS rebinding) must still not
+        // be able to target internal/private addresses. The single exception is
+        // the host the operator declared in GOTENBERG_ALLOWED_PRIVATE_HOST,
+        // which is how a sidecar deployment is supported — see
+        // GotenbergHostPolicy.
+        if (! GotenbergHostPolicy::isExemptFromSafeRemoteUrl((string) $host)
+            && ! SafeRemoteUrl::isSafe((string) $host)) {
+            throw new \RuntimeException('Refusing to render PDF: unsafe Gotenberg host.');
+        }
+
         $request = Gotenberg::chromium($host)
             ->pdf()
             ->margins(0, 0, 0, 0) // Margins can be set using CSS

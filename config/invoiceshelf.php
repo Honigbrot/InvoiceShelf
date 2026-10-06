@@ -13,11 +13,10 @@ use App\Models\RecurringInvoice;
 use App\Models\TaxType;
 
 return [
-
     /*
     * Minimum php version.
     */
-    'min_php_version' => '8.2.0',
+    'min_php_version' => '8.4.0',
 
     /*
     * Minimum mysql version.
@@ -49,30 +48,71 @@ return [
     'base_url' => 'https://invoiceshelf.com',
 
     /*
+    * Whether the app runs inside the official Docker image. The image's
+    * docker/production/inject.sh sets CONTAINERIZED=true in .env at startup.
+    * When true, the in-app updater is disabled (the API refuses and the UI hides
+    * it) because containers upgrade via `docker compose pull`, not by copying
+    * release files over the read-only/ephemeral image filesystem.
+    */
+    'containerized' => env('CONTAINERIZED', false),
+
+    /*
+    * Paths protected from cleanup during updates.
+    * The updater (Updater::cleanStaleFiles) will never delete files under these
+    * prefixes when reconciling the install against a release manifest.json.
+    */
+    'update_protected_paths' => [
+        '.env',
+        'storage',
+        'vendor',
+        'node_modules',
+        'Modules',
+        'public/storage',
+        '.git',
+        'bootstrap/cache',
+        'manifest.json',
+    ],
+
+    /*
     * List of languages supported by InvoiceShelf.
     */
     'languages' => [
         ['code' => 'ar', 'name' => 'Arabic'],
+        ['code' => 'bg', 'name' => 'Bulgarian'],
+        ['code' => 'zh_CN', 'name' => 'Chinese (Simplified)'],
+        ['code' => 'zh', 'name' => 'Chinese (Traditional)'],
+        ['code' => 'hr', 'name' => 'Croatian'],
+        ['code' => 'cs', 'name' => 'Czech'],
         ['code' => 'nl', 'name' => 'Dutch'],
         ['code' => 'en', 'name' => 'English'],
+        ['code' => 'fi', 'name' => 'Finnish'],
         ['code' => 'fr', 'name' => 'French'],
         ['code' => 'de', 'name' => 'German'],
-        ['code' => 'ja', 'name' => 'Japanese'],
+        ['code' => 'el', 'name' => 'Greek'],
+        ['code' => 'hi', 'name' => 'Hindi'],
+        ['code' => 'id', 'name' => 'Indonesian'],
         ['code' => 'it', 'name' => 'Italian'],
-        ['code' => 'lv', 'name' => 'Latvian'],
-        ['code' => 'pl', 'name' => 'Polish'],
-        ['code' => 'pt_BR', 'name' => 'Portuguese (Brazilian)'],
-        ['code' => 'sr', 'name' => 'Serbian Latin'],
+        ['code' => 'ja', 'name' => 'Japanese'],
         ['code' => 'ko', 'name' => 'Korean'],
+        ['code' => 'lv', 'name' => 'Latvian'],
+        ['code' => 'lt', 'name' => 'Lithuanian'],
+        ['code' => 'mk', 'name' => 'Macedonian'],
+        ['code' => 'no', 'name' => 'Norwegian'],
+        ['code' => 'fa', 'name' => 'Persian'],
+        ['code' => 'pl', 'name' => 'Polish'],
+        ['code' => 'pt', 'name' => 'Portuguese'],
+        ['code' => 'pt_BR', 'name' => 'Portuguese (Brazilian)'],
+        ['code' => 'ro', 'name' => 'Romanian'],
+        ['code' => 'ru', 'name' => 'Russian'],
+        ['code' => 'sr', 'name' => 'Serbian Latin'],
+        ['code' => 'sk', 'name' => 'Slovak'],
+        ['code' => 'sl', 'name' => 'Slovenian'],
         ['code' => 'es', 'name' => 'Spanish'],
         ['code' => 'sv', 'name' => 'Svenska'],
-        ['code' => 'sk', 'name' => 'Slovak'],
-        ['code' => 'vi', 'name' => 'Tiếng Việt'],
-        ['code' => 'cs', 'name' => 'Czech'],
-        ['code' => 'el', 'name' => 'Greek'],
-        ['code' => 'hr', 'name' => 'Crotian'],
-        ['code' => 'mk', 'name' => 'Macedonian'],
         ['code' => 'th', 'name' => 'ไทย'],
+        ['code' => 'vi', 'name' => 'Tiếng Việt'],
+        ['code' => 'tr', 'name' => 'Turkish'],
+        ['code' => 'uk', 'name' => 'Ukrainian'],
     ],
 
     /*
@@ -372,16 +412,21 @@ return [
             'ability' => 'view-expense',
             'model' => Expense::class,
         ],
-        [
-            'title' => 'navigation.modules',
-            'group' => 3,
-            'link' => '/admin/modules',
-            'icon' => 'PuzzlePieceIcon',
-            'name' => 'Modules',
-            'owner_only' => true,
-            'ability' => '',
-            'model' => '',
-        ],
+        // TODO: remove env check once the module management os implemented.
+        ...(
+            env('APP_ENV', 'production') == 'development' ? [
+                [
+                    'title' => 'navigation.modules',
+                    'group' => 3,
+                    'link' => '/admin/modules',
+                    'icon' => 'PuzzlePieceIcon',
+                    'name' => 'Modules',
+                    'owner_only' => true,
+                    'ability' => '',
+                    'model' => '',
+                ],
+            ] : []
+        ),
         [
             'title' => 'navigation.users',
             'group' => 3,

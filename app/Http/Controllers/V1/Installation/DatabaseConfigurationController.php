@@ -29,7 +29,10 @@ class DatabaseConfigurationController extends Controller
         $results = $this->environmentManager->saveDatabaseVariables($request);
 
         if (array_key_exists('success', $results)) {
-            Artisan::call('key:generate --force');
+            // Automatically regenerating the key is disabled to prevent complications in the wizard process.
+            // This can cause issues with the CSRF token, resulting in "Token Mismatch" or "Invalid CSRF Token" errors.
+            // It is recommended that the user manually generates the key before running the wizard to ensure application security and stability.
+            // Artisan::call('key:generate --force');
             Artisan::call('optimize:clear');
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
@@ -45,12 +48,13 @@ class DatabaseConfigurationController extends Controller
     public function getDatabaseEnvironment(Request $request)
     {
         $databaseData = [];
+        $connection = $request->connection ?? config('database.default');
 
-        switch ($request->connection) {
+        switch ($connection) {
             case 'sqlite':
                 $databaseData = [
                     'database_connection' => 'sqlite',
-                    'database_name' => database_path('database.sqlite'),
+                    'database_name' => config('database.connections.sqlite.database', storage_path('database.sqlite')),
                 ];
 
                 break;
@@ -67,6 +71,28 @@ class DatabaseConfigurationController extends Controller
             case 'mysql':
                 $databaseData = [
                     'database_connection' => 'mysql',
+                    'database_host' => '127.0.0.1',
+                    'database_port' => 3306,
+                ];
+
+                break;
+
+            case 'mariadb':
+                $databaseData = [
+                    'database_connection' => 'mariadb',
+                    'database_host' => '127.0.0.1',
+                    'database_port' => 3306,
+                ];
+
+                break;
+
+            default:
+                // Never return an empty config: the wizard picks its form from
+                // database_connection, so an unrecognised driver used to render
+                // a blank step with no way forward. Echo it back with the
+                // server defaults instead.
+                $databaseData = [
+                    'database_connection' => $connection,
                     'database_host' => '127.0.0.1',
                     'database_port' => 3306,
                 ];

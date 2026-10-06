@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\CompanySetting;
+use App\Support\MoneyConversion;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExpenseRequest extends FormRequest
@@ -25,6 +26,11 @@ class ExpenseRequest extends FormRequest
         $rules = [
             'expense_date' => [
                 'required',
+            ],
+            'expense_number' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
             'expense_category_id' => [
                 'required',
@@ -77,7 +83,7 @@ class ExpenseRequest extends FormRequest
                 'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
                 'exchange_rate' => $exchange_rate,
-                'base_amount' => $this->amount * $exchange_rate,
+                'base_amount' => MoneyConversion::toBaseMinor($this->amount, $exchange_rate),
                 'currency_id' => $current_currency,
             ])
             ->toArray();

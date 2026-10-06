@@ -1,6 +1,20 @@
 <?php
 
+use App\Models\User;
+
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Services
+    |--------------------------------------------------------------------------
+    |
+    | This file is for storing the credentials for third party services such
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
+    | location for this type of information, allowing packages to have
+    | a conventional file to locate the various service credentials.
+    |
+    */
 
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
@@ -17,7 +31,7 @@ return [
     ],
 
     'stripe' => [
-        'model' => \App\Models\User::class,
+        'model' => User::class,
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook' => [
@@ -26,26 +40,13 @@ return [
         ],
     ],
 
-    'facebook' => [
-        'client_id' => env('FACEBOOK_CLIENT_ID'),
-        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect' => env('FACEBOOK_REDIRECT_URL'),
-    ],
-
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URL'),
-    ],
-
-    'github' => [
-        'client_id' => env('GITHUB_CLIENT_ID'),
-        'client_secret' => env('GITHUB_CLIENT_SECRET'),
-        'redirect' => env('GITHUB_REDIRECT_URL'),
-    ],
-
+    /*
+     * Shared secret for the cron webhook at GET /api/cron, which lets an
+     * external scheduler drive Laravel's own on hosts that cannot register a
+     * crontab entry. Leave it unset and the endpoint refuses everything.
+     */
     'cron_job' => [
-        'auth_token' => env('CRON_JOB_AUTH_TOKEN', 0),
+        'auth_token' => env('CRON_JOB_AUTH_TOKEN'),
     ],
 
     'ses' => [
