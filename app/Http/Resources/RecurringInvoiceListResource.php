@@ -32,14 +32,7 @@ class RecurringInvoiceListResource extends JsonResource
             'frequency' => $this->frequency,
             'send_automatically' => $this->send_automatically,
             'total' => $this->total,
-            'customer' => $this->whenLoaded('customer', fn () => [
-                'id' => $this->customer->id,
-                'name' => $this->customer->name,
-                'contact_name' => $this->customer->contact_name,
-                'currency' => $this->customer->currency
-                    ? new CurrencyResource($this->customer->currency)
-                    : null,
-            ]),
+            'customer' => new CustomerSummaryResource($this->whenLoaded('customer')),
         ];
     }
 }

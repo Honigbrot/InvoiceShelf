@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Admin\Invoice;
 use App\Http\Controllers\Controller;
 use App\Http\Requests;
 use App\Http\Requests\DeleteInvoiceRequest;
+use App\Http\Resources\InvoiceListResource;
 use App\Http\Resources\InvoiceResource;
 use App\Jobs\GenerateInvoicePdfJob;
 use App\Models\Invoice;
@@ -26,11 +27,11 @@ class InvoicesController extends Controller
 
         $invoices = Invoice::whereCompany()
             ->applyFilters($request->all())
-            ->with('customer')
+            ->with(['customer.currency', 'currency'])
             ->latest()
             ->paginateData($limit);
 
-        return InvoiceResource::collection($invoices)
+        return InvoiceListResource::collection($invoices)
             ->additional(['meta' => [
                 'invoice_total_count' => Invoice::whereCompany()->count(),
             ]]);

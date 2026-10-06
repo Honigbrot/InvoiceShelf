@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Admin\Payment;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeletePaymentsRequest;
 use App\Http\Requests\PaymentRequest;
+use App\Http\Resources\PaymentListResource;
 use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -29,10 +30,11 @@ class PaymentsController extends Controller
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'payments.payment_method_id')
             ->applyFilters($request->all())
             ->select('payments.*', 'customers.name', 'invoices.invoice_number', 'payment_methods.name as payment_mode')
+            ->with(['customer.currency', 'currency', 'paymentMethod'])
             ->latest()
             ->paginateData($limit);
 
-        return PaymentResource::collection($payments)
+        return PaymentListResource::collection($payments)
             ->additional(['meta' => [
                 'payment_total_count' => Payment::whereCompany()->count(),
             ]]);

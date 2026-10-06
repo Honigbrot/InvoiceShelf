@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Admin\Estimate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteEstimatesRequest;
 use App\Http\Requests\EstimatesRequest;
+use App\Http\Resources\EstimateListResource;
 use App\Http\Resources\EstimateResource;
 use App\Jobs\GenerateEstimatePdfJob;
 use App\Models\Estimate;
@@ -22,10 +23,11 @@ class EstimatesController extends Controller
             ->join('customers', 'customers.id', '=', 'estimates.customer_id')
             ->applyFilters($request->all())
             ->select('estimates.*', 'customers.name')
+            ->with(['customer.currency', 'currency'])
             ->latest()
             ->paginateData($limit);
 
-        return EstimateResource::collection($estimates)
+        return EstimateListResource::collection($estimates)
             ->additional(['meta' => [
                 'estimate_total_count' => Estimate::whereCompany()->count(),
             ]]);
